@@ -77,14 +77,14 @@ def _openai_compatible_embeddings() -> Embeddings:
 
 def _dashscope_embeddings() -> Embeddings:
     settings = get_settings()
-    if not settings.rag_embedding_api_key and not settings.dashscope_api_key:
+    api_key = settings.rag_embedding_api_key or settings.dashscope_api_key
+    if not api_key:
         raise RuntimeError("RAG_EMBEDDING_API_KEY or DASHSCOPE_API_KEY is required for DashScope embeddings")
-    from langchain_openai import OpenAIEmbeddings
+    from langchain_community.embeddings import DashScopeEmbeddings
 
-    return OpenAIEmbeddings(
+    return DashScopeEmbeddings(
         model=settings.rag_embedding_model,
-        api_key=settings.rag_embedding_api_key or settings.dashscope_api_key,
-        base_url=settings.rag_embedding_base_url or settings.dashscope_base_url,
+        dashscope_api_key=api_key,
     )
 
 

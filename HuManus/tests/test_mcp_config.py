@@ -1,8 +1,10 @@
+from app.core.config import get_settings
 from app.mcp.config import load_mcp_config
 
 
 def test_load_claude_style_amap_mcp_config(tmp_path, monkeypatch):
-    monkeypatch.setenv("AMAP_MAPS_API_KEY", "test-key")
+    settings = get_settings()
+    monkeypatch.setattr(settings, "amap_maps_api_key", "test-key")
     path = tmp_path / "mcp.json"
     path.write_text(
         '{"mcpServers":{"amap-maps":{"command":"npx.cmd","args":["-y","@amap/amap-maps-mcp-server"],"env":{"AMAP_MAPS_API_KEY":"${AMAP_MAPS_API_KEY}"}}}}',
