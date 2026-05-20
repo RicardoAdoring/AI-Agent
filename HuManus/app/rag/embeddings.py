@@ -38,26 +38,54 @@ def get_embedding_model() -> Embeddings:
 
     try:
         if provider in {"openai", "openai_compatible", "custom"}:
-            if not settings.llm_api_key:
-                raise RuntimeError("LLM_API_KEY is required for OpenAI-compatible embeddings")
-            from langchain_openai import OpenAIEmbeddings
-
-            return OpenAIEmbeddings(
-                model=settings.rag_embedding_model,
-                api_key=settings.llm_api_key,
-                base_url=settings.llm_base_url,
-            )
-
+            return _openai_compatible_embeddings()
+        if provider == "dashscope":
+            return _dashscope_embeddings()
         if provider == "ollama":
             return get_ollama_embedding_model()
+        if provider == "hash":
+            if settings.rag_allow_hash_embedding:
+                return get_hash_embedding_model()
+            raise RuntimeError("Hash embeddings are disabled")
     except Exception:
         if not settings.rag_allow_hash_embedding:
             raise
 
     if settings.rag_allow_hash_embedding:
-        return HashEmbeddings()
+        return get_hash_embedding_model()
 
     raise RuntimeError(f"Unsupported RAG_EMBEDDING_PROVIDER: {settings.rag_embedding_provider}")
+
+
+def _openai_compatible_embeddings() -> Embeddings:
+    settings = get_settings()
+    api_key = settings.rag_embedding_api_key or settings.llm_api_key
+    base_url = settings.rag_embedding_base_url or settings.llm_base_url
+    if not api_key:
+        raise RuntimeError("RAG_EMBEDDING_API_KEY or LLM_API_KEY is required for OpenAI-compatible embeddings")
+    from langchain_openai import OpenAIEmbeddings
+
+    kwargs = {
+        "model": settings.rag_embedding_model,
+        "api_key": api_key,
+        "base_url": base_url,
+    }
+    if settings.rag_embedding_dimensions > 0:
+        kwargs["dimensions"] = settings.rag_embedding_dimensions
+    return OpenAIEmbeddings(**kwargs)
+
+
+def _dashscope_embeddings() -> Embeddings:
+    settings = get_settings()
+    if not settings.rag_embedding_api_key and not settings.dashscope_api_key:
+        raise RuntimeError("RAG_EMBEDDING_API_KEY or DASHSCOPE_API_KEY is required for DashScope embeddings")
+    from langchain_openai import OpenAIEmbeddings
+
+    return OpenAIEmbeddings(
+        model=settings.rag_embedding_model,
+        api_key=settings.rag_embedding_api_key or settings.dashscope_api_key,
+        base_url=settings.rag_embedding_base_url or settings.dashscope_base_url,
+    )
 
 
 def get_ollama_embedding_model() -> Embeddings:

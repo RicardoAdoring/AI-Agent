@@ -1,12 +1,11 @@
 from typing import Any
 
+from langchain_core.embeddings import Embeddings
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.core.config import get_settings
 from app.llm.factory import get_chat_model, get_ollama_chat_model
-from langchain_core.embeddings import Embeddings
-
-from app.rag.embeddings import get_embedding_model, get_hash_embedding_model
+from app.rag.embeddings import HashEmbeddings, get_embedding_model, get_hash_embedding_model
 from app.rag.loaders import load_knowledge_documents, split_documents
 from app.rag.vector_store import LocalVectorStore
 
@@ -29,7 +28,7 @@ class RagApp:
         embeddings = self._working_embeddings()
         summary = self.vector_store.build(chunks, embeddings)
         summary["knowledge_dir"] = str(settings.rag_knowledge_dir.as_posix())
-        summary["hash_embedding_fallback"] = embeddings.__class__.__name__ == "HashEmbeddings"
+        summary["hash_embedding_fallback"] = isinstance(embeddings, HashEmbeddings)
         return summary
 
     def retrieve(self, message: str) -> list[dict[str, Any]]:
@@ -62,6 +61,10 @@ class RagApp:
             "sources": self._sources_from_chunks(chunks),
             "chatId": chat_id or "default",
         }
+
+    def status(self) -> dict[str, Any]:
+        self.vector_store.load()
+        return self.vector_store.summary() if self.vector_store.documents else {"status": "empty"}
 
     def _working_embeddings(self, query: str | None = None) -> Embeddings:
         settings = get_settings()
@@ -96,8 +99,9 @@ class RagApp:
         for index, chunk in enumerate(chunks, start=1):
             metadata = chunk.get("metadata", {})
             source = metadata.get("source", "unknown")
+            score = chunk.get("score", 0)
             text = chunk.get("text", "")
-            parts.append(f"[来源 {index}: {source}]\n{text}")
+            parts.append(f"[来源 {index}: {source}, 相似度 {score:.3f}]\n{text}")
         return "\n\n".join(parts)
 
     def _sources_from_chunks(self, chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:

@@ -1,0 +1,3 @@
+[submodule "old/yu-ai-agent"]
+	path = old/yu-ai-agent
+	url = https://github.com/liyupi/yu-ai-agent.git

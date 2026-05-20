@@ -93,6 +93,14 @@ def rebuild_rag_index() -> dict:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@router.get("/rag/status")
+def rag_status() -> dict:
+    try:
+        return rag_app.status()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 @router.get("/rag/retrieve")
 def retrieve_from_rag(message: str = Query(..., min_length=1)) -> dict:
     try:

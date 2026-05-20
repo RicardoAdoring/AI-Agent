@@ -26,6 +26,8 @@ HuManus/data/chat_memory/*.json
 HuManus/data/rag/index.json
 HuManus/data/manus/downloads/*
 HuManus/data/manus/output/*
+HuManus/data/manus/*.sqlite
+HuManus/logger/manus-runs/
 logger/manus-runs/
 
 # OS and editor files

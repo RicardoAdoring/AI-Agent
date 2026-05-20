@@ -34,9 +34,14 @@ class Settings(BaseSettings):
     rag_top_k: int = 4
     rag_embedding_provider: str = "hash"
     rag_embedding_model: str = "hash-embedding"
+    rag_embedding_api_key: str = ""
+    rag_embedding_base_url: str = ""
+    rag_embedding_dimensions: int = 0
     ollama_embedding_model: str = "nomic-embed-text"
     rag_allow_hash_embedding: bool = True
     rag_auto_build: bool = True
+    rag_score_threshold: float = -1.0
+    rag_require_index_config_match: bool = True
 
     manus_enabled: bool = True
     manus_max_steps: int = 20
@@ -49,9 +54,17 @@ class Settings(BaseSettings):
     manus_max_download_bytes: int = 10 * 1024 * 1024
     manus_search_provider: str = "placeholder"
     manus_search_api_key: str = ""
+    manus_search_base_url: str = "https://www.searchapi.io/api/v1/search"
+    manus_search_engine: str = "baidu"
+    manus_search_top_k: int = 5
 
     mcp_enabled: bool = False
     mcp_config_path: Path = Path("./mcp.json")
+    mcp_tool_call_timeout_seconds: float = 30.0
+    amap_maps_api_key: str = ""
+
+    agent_backend: str = "langgraph"
+    agent_checkpoint_path: Path = Path("./data/manus/checkpoints.sqlite")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
