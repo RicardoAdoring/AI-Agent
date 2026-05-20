@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HuManus Step 3 工具层日志</title>
+  <style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Arial,sans-serif;line-height:1.75;background:#f6f8fb;color:#1f2937;padding:32px}.container{max-width:1080px;margin:0 auto;background:white;border-radius:16px;padding:34px;box-shadow:0 10px 30px rgba(15,23,42,.08)}h1{margin-top:0}h2{border-left:5px solid #2563eb;padding-left:12px;margin-top:30px}code{background:#f3f4f6;padding:2px 6px;border-radius:5px}pre{background:#111827;color:#f9fafb;padding:16px;border-radius:12px;overflow:auto}table{width:100%;border-collapse:collapse}td,th{border:1px solid #e5e7eb;padding:10px;text-align:left;vertical-align:top}th{background:#f3f4f6}.ok{background:#ecfdf5;border:1px solid #a7f3d0;padding:14px;border-radius:10px}.warn{background:#fff7ed;border:1px solid #fed7aa;padding:14px;border-radius:10px}</style>
+</head>
+<body><div class="container">
+<h1>HuManus Step 3：安全工具层实现日志</h1>
+<p>记录日期：2026-05-19</p>
+<div class="ok"><strong>阶段结论：</strong>已新增安全工具层，提供文件、Web、资源下载、PDF 生成和 terminate 工具，并明确禁用任意终端命令执行。</div>
+<h2>新增/修改文件</h2>
+<table><tr><th>路径</th><th>说明</th></tr>
+<tr><td><code>HuManus/app/tools/base.py</code></td><td>定义 <code>BaseTool</code> 和 <code>ToolResult</code>。</td></tr>
+<tr><td><code>HuManus/app/tools/safety.py</code></td><td>集中处理路径沙箱、敏感文件阻断、URL 内网地址阻断。</td></tr>
+<tr><td><code>HuManus/app/tools/file_tools.py</code></td><td>实现 <code>read_file</code>、<code>write_file</code>。</td></tr>
+<tr><td><code>HuManus/app/tools/web_tools.py</code></td><td>实现 <code>web_search</code> 占位、<code>web_scrape</code>、<code>resource_download</code>。</td></tr>
+<tr><td><code>HuManus/app/tools/pdf_tools.py</code></td><td>使用 ReportLab 实现 <code>generate_pdf</code>。</td></tr>
+<tr><td><code>HuManus/app/tools/terminate.py</code></td><td>实现 Agent 终止工具 <code>terminate</code>。</td></tr>
+<tr><td><code>HuManus/app/tools/terminal_tools.py</code></td><td>提供禁用的终端命令 stub，不注册到默认工具。</td></tr>
+<tr><td><code>HuManus/app/tools/registry.py</code></td><td>集中注册默认安全工具。</td></tr>
+<tr><td><code>HuManus/app/core/config.py</code></td><td>新增 Manus/MCP 相关配置项。</td></tr>
+<tr><td><code>HuManus/requirements.txt</code></td><td>新增 <code>httpx</code> 和 <code>reportlab</code>。</td></tr>
+</table>
+<h2>默认注册工具</h2>
+<ul>
+<li><code>read_file</code>：读取 Manus 工作区内 UTF-8 文本文件。</li>
+<li><code>write_file</code>：写入 Manus 工作区内 UTF-8 文本文件。</li>
+<li><code>web_search</code>：搜索 provider 占位，未配置 provider 时返回明确错误。</li>
+<li><code>web_scrape</code>：抓取公开 HTTP/HTTPS 页面，默认阻断内网和本机地址。</li>
+<li><code>resource_download</code>：带大小限制下载公开资源到下载目录。</li>
+<li><code>generate_pdf</code>：把文本内容生成 PDF 到输出目录。</li>
+<li><code>terminate</code>：结束 Agent 循环。</li>
+</ul>
+<h2>安全边界</h2>
+<div class="warn"><strong>重要：</strong>任意终端命令执行未开放。<code>TerminalCommandTool</code> 仅作为禁用 stub 存在，不进入默认工具注册表。</div>
+<ul>
+<li>文件路径必须在 <code>MANUS_WORKSPACE_DIR</code>、输出目录或下载目录内。</li>
+<li>阻止访问 <code>.env</code>、<code>credentials.json</code>、SSH 私钥等敏感文件名。</li>
+<li>URL 默认阻止 private、loopback、link-local、multicast 地址。</li>
+<li>下载资源有最大字节数限制。</li>
+<li>Web search 未配置 provider 时不伪造结果。</li>
+</ul>
+<h2>验证命令</h2>
+<pre><code>.venv/Scripts/python -m compileall app
+.venv/Scripts/python -c "from app.tools.registry import get_default_tools; print([tool.name for tool in get_default_tools()])"</code></pre>
+</div></body></html>

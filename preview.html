@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>yu-ai-agent 改写为 Python 版本任务说明</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.75;
+      color: #222;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px;
+      background: #f7f8fa;
+    }
+    .container {
+      background: #fff;
+      border-radius: 16px;
+      padding: 36px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+    }
+    h1 {
+      font-size: 30px;
+      margin-bottom: 8px;
+      color: #1f2937;
+    }
+    h2 {
+      margin-top: 34px;
+      padding-left: 12px;
+      border-left: 5px solid #2563eb;
+      color: #1f2937;
+    }
+    h3 {
+      margin-top: 24px;
+      color: #374151;
+    }
+    .summary {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 18px 22px;
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+    .warning {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .success {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f3f4f6;
+      font-weight: 700;
+    }
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-family: Consolas, Monaco, "Courier New", monospace;
+    }
+    pre {
+      background: #111827;
+      color: #f9fafb;
+      padding: 18px;
+      border-radius: 12px;
+      overflow-x: auto;
+      line-height: 1.6;
+    }
+    .checklist li {
+      margin: 6px 0;
+    }
+    .meta {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>yu-ai-agent 改写为 Python 版本任务说明</h1>
+    <div class="meta">
+      原仓库：<code>https://github.com/liyupi/yu-ai-agent</code><br />
+      目标：将 Java / Spring AI 项目重构为 Python / FastAPI / LangChain / LangGraph 项目
+    </div>
+
+    <div class="summary">
+      <strong>总体结论：</strong>
+      该仓库可以改写为 Python 版本，而且非常适合作为 Python Agent 项目练习。
+      但不建议逐行翻译 Java 代码，而应该保留原项目的功能思想与接口设计，
+      使用 Python 生态重新实现后端核心能力。
+    </div>
+
+    <h2>一、项目现状分析</h2>
+    <p>
+      原项目是一个基于 Java 生态的 AI Agent 项目，核心能力包括：
+      AI 恋爱大师应用、多轮对话、SSE 流式输出、RAG 知识库、工具调用、
+      MCP 服务接入、ReAct 智能体、PDF 生成、网页搜索与资源下载等。
+    </p>
+    <p>
+      原后端技术栈主要是：
+      <code>Java 21</code>、<code>Spring Boot 3</code>、<code>Spring AI</code>、
+      <code>LangChain4j</code>、<code>PGVector</code>、<code>MCP</code>、
+      <code>SSE</code>、<code>DashScope</code>、<code>Ollama</code>。
+    </p>
+    <p>
+      原前端是 Vue3 项目，前端本身不一定要重写。只要 Python 后端保持接口路径、
+      请求参数和响应格式基本一致，前端可以继续复用。
+    </p>
+
+    <h2>二、改写判断</h2>
+    <table>
+      <tr>
+        <th>判断项</th>
+        <th>结论</th>
+      </tr>
+      <tr>
+        <td>是否能改成 Python</td>
+        <td>可以</td>
+      </tr>
+      <tr>
+        <td>是否适合逐行翻译</td>
+        <td>不适合。应该按功能模块重构。</td>
+      </tr>
+      <tr>
+        <td>推荐改写范围</td>
+        <td>优先重写后端，前端尽量保留。</td>
+      </tr>
+      <tr>
+        <td>改写难度</td>
+        <td>中等偏上，约 7/10。</td>
+      </tr>
+      <tr>
+        <td>适合作为什么项目</td>
+        <td>适合作为 FastAPI + LangChain + LangGraph 的 AI Agent 简历项目。</td>
+      </tr>
+    </table>
+
+    <h2>三、Python 技术栈建议</h2>
+    <table>
+      <tr>
+        <th>功能</th>
+        <th>Python 推荐方案</th>
+      </tr>
+      <tr>
+        <td>Web 后端</td>
+        <td><code>FastAPI</code> + <code>Uvicorn</code></td>
+      </tr>
+      <tr>
+        <td>大模型接入</td>
+        <td><code>DashScope Python SDK</code>、OpenAI Compatible API 或 <code>Ollama</code></td>
+      </tr>
+      <tr>
+        <td>Agent 框架</td>
+        <td><code>LangChain</code> + <code>LangGraph</code></td>
+      </tr>
+      <tr>
+        <td>RAG 知识库</td>
+        <td><code>LangChain Retriever</code> + <code>Chroma</code> / <code>FAISS</code> / <code>pgvector</code></td>
+      </tr>
+      <tr>
+        <td>对话记忆</td>
+        <td>JSON 文件、SQLite、Redis 或 LangChain message history</td>
+      </tr>
+      <tr>
+        <td>流式输出</td>
+        <td><code>FastAPI StreamingResponse</code> / SSE</td>
+      </tr>
+      <tr>
+        <td>工具调用</td>
+        <td><code>LangChain @tool</code> 或 LangGraph ToolNode</td>
+      </tr>
+      <tr>
+        <td>MCP</td>
+        <td><code>modelcontextprotocol</code> Python SDK</td>
+      </tr>
+      <tr>
+        <td>PDF 生成</td>
+        <td><code>reportlab</code> 或 <code>weasyprint</code></td>
+      </tr>
+      <tr>
+        <td>网页抓取</td>
+        <td><code>requests</code> + <code>BeautifulSoup</code>，复杂页面可用 <code>playwright</code></td>
+      </tr>
+      <tr>
+        <td>配置管理</td>
+        <td><code>pydantic-settings</code> + <code>.env</code></td>
+      </tr>
+    </table>
+
+    <h2>四、Java 模块到 Python 模块的映射</h2>
+    <table>
+      <tr>
+        <th>Java 原模块</th>
+        <th>主要职责</th>
+        <th>Python 改写方案</th>
+      </tr>
+      <tr>
+        <td><code>controller</code></td>
+        <td>提供聊天接口、SSE 接口、Manus Agent 接口</td>
+        <td>FastAPI Router</td>
+      </tr>
+      <tr>
+        <td><code>app</code></td>
+        <td>AI 应用逻辑，例如 LoveApp</td>
+        <td>services / apps 模块</td>
+      </tr>
+      <tr>
+        <td><code>agent</code></td>
+        <td>BaseAgent、ToolCallAgent、YuManus</td>
+        <td>LangGraph Agent 或自定义 ReAct 循环</td>
+      </tr>
+      <tr>
+        <td><code>chatmemory</code></td>
+        <td>对话历史记忆</td>
+        <td>JSON / SQLite / Redis message history</td>
+      </tr>
+      <tr>
+        <td><code>rag</code></td>
+        <td>知识库检索增强</td>
+        <td>LangChain Loader + Splitter + VectorStore + Retriever</td>
+      </tr>
+      <tr>
+        <td><code>tools</code></td>
+        <td>搜索、抓取、文件、PDF、资源下载、终止工具</td>
+        <td>Python functions + LangChain tools</td>
+      </tr>
+      <tr>
+        <td><code>config</code></td>
+        <td>模型、向量库、MCP、工具等配置</td>
+        <td>pydantic-settings 配置类</td>
+      </tr>
+    </table>
+
+    <h2>五、推荐 Python 项目目录结构</h2>
+    <pre><code>yu-ai-agent-python/
+├── app/
+│   ├── main.py                  # FastAPI 入口
+│   ├── api/
+│   │   └── ai.py                # 聊天、SSE、Agent 接口
+│   ├── core/
+│   │   ├── config.py            # 环境变量和项目配置
+│   │   └── logging.py           # 日志配置
+│   ├── llm/
+│   │   ├── dashscope_llm.py     # DashScope / Qwen 接入
+│   │   └── ollama_llm.py        # Ollama 接入，可选
+│   ├── memory/
+│   │   └── file_chat_memory.py  # 文件型对话记忆
+│   ├── rag/
+│   │   ├── loader.py            # 文档加载
+│   │   ├── vector_store.py      # 向量库初始化
+│   │   └── retriever.py         # 检索器
+│   ├── tools/
+│   │   ├── web_search.py
+│   │   ├── web_scraping.py
+│   │   ├── file_operation.py
+│   │   ├── pdf_generation.py
+│   │   ├── resource_download.py
+│   │   └── terminate.py
+│   ├── agents/
+│   │   ├── base_agent.py
+│   │   ├── react_agent.py
+│   │   └── yu_manus.py
+│   └── services/
+│       └── love_app.py
+├── data/
+│   ├── knowledge/
+│   └── chat_memory/
+├── requirements.txt
+├── .env.example
+└── README.md</code></pre>
+
+    <h2>六、分阶段改写路线</h2>
+
+    <h3>阶段 1：实现最小可运行版本 MVP</h3>
+    <ul class="checklist">
+      <li>搭建 FastAPI 项目。</li>
+      <li>实现基础聊天接口。</li>
+      <li>实现 SSE 流式输出接口。</li>
+      <li>接入 DashScope 或 Ollama 模型。</li>
+      <li>实现基于 <code>session_id</code> 的多轮对话记忆。</li>
+      <li>尽量保持原 Vue 前端接口不变。</li>
+    </ul>
+
+    <h3>阶段 2：实现 RAG 知识库</h3>
+    <ul class="checklist">
+      <li>读取 markdown、txt、pdf 等本地知识文件。</li>
+      <li>进行文本切分。</li>
+      <li>调用 embedding 模型生成向量。</li>
+      <li>存入 Chroma、FAISS 或 pgvector。</li>
+      <li>用户提问时先检索相关内容，再拼接上下文让模型回答。</li>
+    </ul>
+
+    <h3>阶段 3：实现工具调用</h3>
+    <ul class="checklist">
+      <li>实现网页搜索工具。</li>
+      <li>实现网页抓取工具。</li>
+      <li>实现文件读写工具。</li>
+      <li>实现 PDF 生成工具。</li>
+      <li>实现资源下载工具。</li>
+      <li>实现 terminate 终止工具。</li>
+      <li>将这些工具注册到 LangChain / LangGraph Agent 中。</li>
+    </ul>
+
+    <h3>阶段 4：实现 YuManus / ReAct Agent</h3>
+    <ul class="checklist">
+      <li>实现 Agent 状态管理：running、finished、error。</li>
+      <li>实现最大步数限制。</li>
+      <li>实现思考、选择工具、执行工具、观察结果、继续规划的循环。</li>
+      <li>支持模型根据用户目标自主调用工具。</li>
+      <li>支持调用终止工具后结束任务。</li>
+    </ul>
+
+    <h3>阶段 5：补充 MCP 能力</h3>
+    <ul class="checklist">
+      <li>使用 Python MCP SDK 接入 MCP Server。</li>
+      <li>将 MCP 工具包装成 Agent 可调用工具。</li>
+      <li>在 Agent 中统一管理本地工具与 MCP 工具。</li>
+    </ul>
+
+    <h2>七、需要保持兼容的接口</h2>
+    <p>
+      为了尽量复用原前端，Python 后端建议保留类似接口：
+    </p>
+    <pre><code>GET /api/ai/love_app/chat/sse?message=xxx&amp;chatId=xxx
+
+GET /api/ai/love_app/chat?message=xxx&amp;chatId=xxx
+
+GET /api/ai/manus/chat?message=xxx</code></pre>
+    <p>
+      具体请求方式可以根据原前端实际调用代码调整，但优先目标是：
+      <strong>前端尽量不改，后端替换为 Python 实现。</strong>
+    </p>
+
+    <h2>八、核心实现思路</h2>
+
+    <h3>1. LoveApp 应用</h3>
+    <p>
+      Python 版 LoveApp 应负责：构造系统提示词、读取用户历史对话、调用大模型、
+      支持普通回答、支持流式回答、支持 RAG 增强、支持工具调用。
+    </p>
+
+    <h3>2. ChatMemory 记忆模块</h3>
+    <p>
+      使用 <code>chat_id</code> 或 <code>session_id</code> 区分不同会话。
+      初期可以把历史消息保存到本地 JSON 文件，后续再换成 SQLite 或 Redis。
+    </p>
+
+    <h3>3. RAG 模块</h3>
+    <p>
+      RAG 不需要照搬 Java 的 VectorStore 写法。Python 中可以使用 LangChain 的
+      DocumentLoader、TextSplitter、Embedding、VectorStore 和 Retriever 重新实现。
+    </p>
+
+    <h3>4. Tool Calling 模块</h3>
+    <p>
+      每个工具都写成一个普通 Python 函数，再用 LangChain 的 <code>@tool</code>
+      装饰器包装。Agent 可以根据模型输出决定调用哪个工具。
+    </p>
+
+    <h3>5. ReAct Agent 模块</h3>
+    <p>
+      可以用 LangGraph 实现，也可以手写循环。核心逻辑是：
+    </p>
+    <pre><code>用户目标
+-&gt; 模型分析下一步
+-&gt; 选择工具
+-&gt; 执行工具
+-&gt; 获得观察结果
+-&gt; 继续规划
+-&gt; 达到目标或调用 terminate 工具结束</code></pre>
+
+    <h2>九、验收标准</h2>
+    <ul class="checklist">
+      <li>FastAPI 项目可以正常启动。</li>
+      <li>基础聊天接口可以调用大模型并返回结果。</li>
+      <li>SSE 接口可以流式输出，而不是一次性输出。</li>
+      <li>同一个 <code>chat_id</code> 下可以保留多轮上下文。</li>
+      <li>RAG 可以从本地知识库检索内容并辅助回答。</li>
+      <li>Agent 可以根据任务自动调用至少 2 个工具。</li>
+      <li>PDF 工具可以生成文件。</li>
+      <li>网页抓取工具可以提取网页文本。</li>
+      <li>前端 Vue 项目可以连接 Python 后端。</li>
+    </ul>
+
+    <h2>十、给 Claude Code 的执行提示词</h2>
+    <div class="success">
+      下面这段可以直接复制给 Claude Code：
+    </div>
+    <pre><code>请帮我把 Java Spring AI 项目 https://github.com/liyupi/yu-ai-agent 改写为 Python 版本。
+
+要求：
+1. 不要逐行翻译 Java 代码，而是按照原项目功能重新设计 Python 后端。
+2. 技术栈使用 FastAPI + LangChain + LangGraph。
+3. 保留原项目前端可调用的接口风格，尽量让 Vue 前端少改或不改。
+4. 先实现 MVP：
+   - FastAPI 服务启动
+   - 基础聊天接口
+   - SSE 流式聊天接口
+   - DashScope 或 Ollama 模型接入
+   - 基于 chat_id/session_id 的多轮对话记忆
+5. 再实现 RAG：
+   - 文档加载
+   - 文本切分
+   - embedding
+   - 向量库存储
+   - 检索增强回答
+6. 再实现工具调用：
+   - web_search_tool
+   - web_scraping_tool
+   - file_operation_tool
+   - pdf_generation_tool
+   - resource_download_tool
+   - terminate_tool
+7. 最后实现类似 YuManus 的 ReAct Agent：
+   - 状态管理
+   - 最大步数限制
+   - 模型规划
+   - 工具调用
+   - 观察结果
+   - 自动终止
+8. 请按照下面目录结构生成项目：
+   app/main.py
+   app/api/ai.py
+   app/core/config.py
+   app/llm/
+   app/memory/
+   app/rag/
+   app/tools/
+   app/agents/
+   app/services/
+   requirements.txt
+   .env.example
+   README.md
+
+请先帮我完成第一阶段 MVP，不要一次性写太多功能。每一步完成后告诉我如何运行和测试。</code></pre>
+
+    <div class="warning">
+      <strong>注意：</strong>
+      如果只是学习改写，一般没有问题；如果要公开发布或商业使用，需要确认原仓库许可证与作者授权。
+      另外，Python 改写时应避免直接复制原项目大量代码，而是按照功能重新实现。
+    </div>
+  </div>
+</body>
+</html>

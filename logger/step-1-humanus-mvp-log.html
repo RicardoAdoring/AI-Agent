@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HuManus 第一阶段改造日志</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 32px;
+      background: #f6f8fb;
+      color: #1f2937;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.75;
+    }
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 18px;
+      padding: 36px 42px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      color: #111827;
+    }
+    h2 {
+      margin-top: 34px;
+      padding-left: 12px;
+      border-left: 5px solid #2563eb;
+      color: #111827;
+    }
+    h3 {
+      margin-top: 22px;
+      color: #374151;
+    }
+    .meta, .note {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .summary {
+      margin: 22px 0;
+      padding: 18px 22px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+    }
+    .success {
+      margin: 18px 0;
+      padding: 16px 20px;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 12px;
+    }
+    .warning {
+      margin: 18px 0;
+      padding: 16px 20px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f3f4f6;
+      font-weight: 700;
+    }
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-family: Consolas, Monaco, "Courier New", monospace;
+    }
+    pre {
+      background: #111827;
+      color: #f9fafb;
+      padding: 18px;
+      border-radius: 12px;
+      overflow-x: auto;
+      line-height: 1.6;
+    }
+    ul li {
+      margin: 6px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>HuManus 第一阶段改造日志</h1>
+    <div class="meta">
+      记录日期：2026-05-18<br />
+      工作区：<code>F:\胡嘉鑫\workspace\Agent项目\Agent超级智能体</code><br />
+      原始任务文件：<code>preview.html</code><br />
+      原仓库：<code>https://github.com/liyupi/yu-ai-agent</code>
+    </div>
+
+    <div class="summary">
+      <strong>阶段结论：</strong>
+      已完成第一阶段 MVP。原 Java / Spring AI 项目已克隆保存到 <code>old/yu-ai-agent</code>，新的 Python / FastAPI 后端已创建到 <code>HuManus</code>，并完成基础聊天、SSE 流式输出、OpenAI-compatible 主模型、Ollama 备用模型和 JSON 文件多轮记忆。
+    </div>
+
+    <h2>一、目录保存结果</h2>
+    <table>
+      <tr>
+        <th>目录</th>
+        <th>用途</th>
+      </tr>
+      <tr>
+        <td><code>old/yu-ai-agent</code></td>
+        <td>保存从 GitHub 克隆下来的原 Java / Spring AI 项目，用于参考原接口、前端调用方式和功能模块。</td>
+      </tr>
+      <tr>
+        <td><code>HuManus</code></td>
+        <td>保存新实现的 Python MVP 后端项目。</td>
+      </tr>
+      <tr>
+        <td><code>logger</code></td>
+        <td>保存阶段日志，本文件即第一阶段日志。</td>
+      </tr>
+    </table>
+
+    <h2>二、已完成的主要改动</h2>
+    <h3>1. 原项目克隆</h3>
+    <ul>
+      <li>执行克隆：<code>git clone https://github.com/liyupi/yu-ai-agent old/yu-ai-agent</code></li>
+      <li>确认原后端主要接口位于：<code>old/yu-ai-agent/src/main/java/com/yupi/yuaiagent/controller/AiController.java</code></li>
+      <li>确认原前端请求封装位于：<code>old/yu-ai-agent/yu-ai-agent-frontend/src/api/index.js</code></li>
+    </ul>
+
+    <h3>2. Python MVP 项目创建</h3>
+    <ul>
+      <li>创建新项目目录：<code>HuManus</code></li>
+      <li>创建 FastAPI 应用入口：<code>HuManus/app/main.py</code></li>
+      <li>创建 AI 接口路由：<code>HuManus/app/api/ai.py</code></li>
+      <li>创建配置模块：<code>HuManus/app/core/config.py</code></li>
+      <li>创建模型工厂：<code>HuManus/app/llm/factory.py</code></li>
+      <li>创建文件型聊天记忆：<code>HuManus/app/memory/file_chat_memory.py</code></li>
+      <li>创建 LoveApp 服务：<code>HuManus/app/services/love_app.py</code></li>
+      <li>创建依赖文件：<code>HuManus/requirements.txt</code></li>
+      <li>创建环境变量示例：<code>HuManus/.env.example</code></li>
+      <li>创建本地环境变量文件：<code>HuManus/.env</code></li>
+      <li>创建运行说明：<code>HuManus/README.md</code></li>
+      <li>创建忽略规则：<code>HuManus/.gitignore</code></li>
+    </ul>
+
+    <h3>3. 模型配置调整</h3>
+    <ul>
+      <li>主模型接口切换为 OpenAI-compatible 服务：<code>http://localhost:8317/v1</code></li>
+      <li>主模型设置为：<code>gpt-5.5</code></li>
+      <li>API Key 已写入本地 <code>.env</code>，日志中仅脱敏记录：<code>sk-7564****7493</code></li>
+      <li>备用模型设置为 Ollama：<code>qwen3:4b</code></li>
+      <li>开启备用模型回退：<code>ENABLE_OLLAMA_FALLBACK=true</code></li>
+      <li>已验证本地模型服务 <code>/models</code> 可返回模型列表，并包含 <code>gpt-5.5</code></li>
+    </ul>
+
+    <h2>三、当前 HuManus 框架结构</h2>
+    <pre><code>HuManus/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── ai.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   └── config.py
+│   ├── llm/
+│   │   ├── __init__.py
+│   │   ├── factory.py
+│   │   ├── ollama_client.py
+│   │   └── dashscope_client.py
+│   ├── memory/
+│   │   ├── __init__.py
+│   │   └── file_chat_memory.py
+│   └── services/
+│       ├── __init__.py
+│       └── love_app.py
+├── data/
+│   └── chat_memory/
+├── .env
+├── .env.example
+├── .gitignore
+├── README.md
+└── requirements.txt</code></pre>
+
+    <h2>四、当前核心模块说明</h2>
+    <table>
+      <tr>
+        <th>文件</th>
+        <th>职责</th>
+      </tr>
+      <tr>
+        <td><code>app/main.py</code></td>
+        <td>创建 FastAPI 应用，配置 CORS，注册 AI 路由，提供 <code>/health</code> 健康检查。</td>
+      </tr>
+      <tr>
+        <td><code>app/api/ai.py</code></td>
+        <td>提供与原 Vue 前端兼容的聊天接口，包括同步聊天、SSE 聊天和 Manus 占位流式接口。</td>
+      </tr>
+      <tr>
+        <td><code>app/core/config.py</code></td>
+        <td>通过 <code>pydantic-settings</code> 读取 <code>.env</code> 配置，包括主模型、备用模型、聊天记忆目录等。</td>
+      </tr>
+      <tr>
+        <td><code>app/llm/factory.py</code></td>
+        <td>根据配置创建主模型或 Ollama 备用模型。主模型使用 <code>langchain_openai.ChatOpenAI</code> 连接本地 OpenAI-compatible 服务。</td>
+      </tr>
+      <tr>
+        <td><code>app/memory/file_chat_memory.py</code></td>
+        <td>实现基于 JSON 文件的多轮对话记忆，并对 <code>chatId</code> 做安全清洗，避免路径穿越。</td>
+      </tr>
+      <tr>
+        <td><code>app/services/love_app.py</code></td>
+        <td>实现 AI 恋爱大师业务逻辑，构造系统提示词、加载历史、调用模型、保存回复，并在主模型失败时回退到 Ollama。</td>
+      </tr>
+    </table>
+
+    <h2>五、已注册接口</h2>
+    <table>
+      <tr>
+        <th>接口</th>
+        <th>说明</th>
+      </tr>
+      <tr>
+        <td><code>GET /health</code></td>
+        <td>健康检查，返回 <code>{"status":"ok"}</code>。</td>
+      </tr>
+      <tr>
+        <td><code>GET /api/ai/love_app/chat</code></td>
+        <td>基础同步聊天接口，返回纯文本。</td>
+      </tr>
+      <tr>
+        <td><code>GET /api/ai/love_app/chat/sync</code></td>
+        <td>兼容原 Java 后端同步聊天路径。</td>
+      </tr>
+      <tr>
+        <td><code>GET /api/ai/love_app/chat/sse</code></td>
+        <td>兼容原 Vue 前端使用的 SSE 流式聊天接口。</td>
+      </tr>
+      <tr>
+        <td><code>GET /api/ai/love_app/chat/server_sent_event</code></td>
+        <td>兼容原 Java 后端的 ServerSentEvent 风格路径。</td>
+      </tr>
+      <tr>
+        <td><code>GET /api/ai/love_app/chat/sse_emitter</code></td>
+        <td>兼容原 Java 后端的 SseEmitter 风格路径。</td>
+      </tr>
+      <tr>
+        <td><code>GET /api/ai/manus/chat</code></td>
+        <td>MVP 阶段提供流式接口和占位说明，内部暂时复用基础聊天能力；完整 ReAct Agent 留到后续阶段。</td>
+      </tr>
+    </table>
+
+    <h2>六、模型与回退逻辑</h2>
+    <pre><code>LLM_PROVIDER=openai_compatible
+LLM_BASE_URL=http://localhost:8317/v1
+LLM_MODEL=gpt-5.5
+ENABLE_OLLAMA_FALLBACK=true
+
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=qwen3:4b</code></pre>
+    <p>
+      当前调用顺序为：先调用本地 OpenAI-compatible 主模型服务；如果主模型调用失败，且 <code>ENABLE_OLLAMA_FALLBACK=true</code>，则自动调用 Ollama 中的 <code>qwen3:4b</code>。
+    </p>
+
+    <h2>七、已执行验证</h2>
+    <ul>
+      <li>Python 文件语法编译通过：<code>python -m compileall app</code></li>
+      <li>依赖安装成功：<code>pip install -r requirements.txt</code></li>
+      <li>FastAPI 应用可正常导入。</li>
+      <li>服务可在 <code>8123</code> 端口启动。</li>
+      <li>健康检查通过：<code>GET /health</code> 返回 <code>{"status":"ok"}</code></li>
+      <li>模型配置读取验证通过：主模型为 <code>gpt-5.5</code>，备用模型为 <code>qwen3:4b</code>。</li>
+      <li>聊天接口测试通过：请求“请只回复ok”返回 <code>ok</code>。</li>
+      <li>文件型聊天记忆读写和 <code>chatId</code> 安全清洗逻辑通过测试。</li>
+    </ul>
+
+    <h2>八、启动方式</h2>
+    <pre><code>cd HuManus
+source .venv/Scripts/activate
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8123</code></pre>
+
+    <h2>九、测试命令</h2>
+    <pre><code>curl http://127.0.0.1:8123/health
+
+curl -G "http://127.0.0.1:8123/api/ai/love_app/chat" \
+  --data-urlencode "message=你好" \
+  --data-urlencode "chatId=test001"
+
+curl -N -G "http://127.0.0.1:8123/api/ai/love_app/chat/sse" \
+  --data-urlencode "message=帮我分析一下怎么和喜欢的人聊天" \
+  --data-urlencode "chatId=test_sse"
+
+curl -N -G "http://127.0.0.1:8123/api/ai/manus/chat" \
+  --data-urlencode "message=帮我规划一个学习计划"</code></pre>
+
+    <h2>十、第二阶段 RAG 知识库改造</h2>
+    <div class="summary">
+      <strong>阶段结论：</strong>
+      第二阶段已完成本地 RAG 知识库 MVP。当前支持读取 <code>data/knowledge</code> 下的 <code>.txt</code>、<code>.md</code>、<code>.json</code> 文件，进行文本切分、embedding、保存本地 JSON 向量索引、检索相关 chunk，并通过 RAG 问答接口返回答案和来源。
+    </div>
+
+    <h3>1. 新增文件和目录</h3>
+    <table>
+      <tr>
+        <th>路径</th>
+        <th>说明</th>
+      </tr>
+      <tr>
+        <td><code>HuManus/app/rag/loaders.py</code></td>
+        <td>加载本地知识文件，并使用 LangChain 文本切分器生成 chunk。</td>
+      </tr>
+      <tr>
+        <td><code>HuManus/app/rag/embeddings.py</code></td>
+        <td>封装 OpenAI-compatible、Ollama 和开发用 hash embedding。</td>
+      </tr>
+      <tr>
+        <td><code>HuManus/app/rag/vector_store.py</code></td>
+        <td>实现本地 JSON 向量索引和余弦相似度检索。</td>
+      </tr>
+      <tr>
+        <td><code>HuManus/app/services/rag_app.py</code></td>
+        <td>实现索引构建、检索和 RAG 增强问答服务。</td>
+      </tr>
+      <tr>
+        <td><code>HuManus/data/knowledge/example.md</code></td>
+        <td>新增用于验证的示例知识文件。</td>
+      </tr>
+      <tr>
+        <td><code>HuManus/data/rag/index.json</code></td>
+        <td>本地向量索引文件，已加入 <code>.gitignore</code>，避免误提交大文件。</td>
+      </tr>
+    </table>
+
+    <h3>2. 新增配置</h3>
+    <pre><code>RAG_ENABLED=true
+RAG_KNOWLEDGE_DIR=./data/knowledge
+RAG_INDEX_DIR=./data/rag
+RAG_CHUNK_SIZE=800
+RAG_CHUNK_OVERLAP=120
+RAG_TOP_K=4
+RAG_EMBEDDING_PROVIDER=openai_compatible
+RAG_EMBEDDING_MODEL=text-embedding-3-small
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+RAG_ALLOW_HASH_EMBEDDING=true
+RAG_AUTO_BUILD=true</code></pre>
+
+    <p>
+      当前本地 OpenAI-compatible 服务的 chat 接口可用，但 embedding 接口返回 404，因此 RAG 验证时自动回退到了开发用 hash embedding。该回退可验证完整 RAG 流程，但不适合生产语义检索。后续可配置可用的 embedding 服务或 Ollama embedding 模型提升检索质量。
+    </p>
+
+    <h3>3. 新增接口</h3>
+    <table>
+      <tr>
+        <th>接口</th>
+        <th>说明</th>
+      </tr>
+      <tr>
+        <td><code>POST /api/ai/rag/index</code></td>
+        <td>读取本地知识文件并重建 RAG 索引。</td>
+      </tr>
+      <tr>
+        <td><code>GET /api/ai/rag/retrieve?message=...</code></td>
+        <td>仅执行检索，返回 top-k chunk、score 和 source，便于调试。</td>
+      </tr>
+      <tr>
+        <td><code>GET /api/ai/rag/chat?message=...&amp;chatId=...</code></td>
+        <td>执行知识库增强问答，返回 <code>answer</code>、<code>sources</code> 和 <code>chatId</code>。</td>
+      </tr>
+    </table>
+
+    <h3>4. 第二阶段验证结果</h3>
+    <ul>
+      <li>依赖检查通过：<code>numpy</code> 已加入并安装。</li>
+      <li>编译检查通过：<code>.venv/Scripts/python -m compileall app</code></li>
+      <li>导入检查通过：FastAPI 应用可导入，RAG 路由已注册。</li>
+      <li>健康检查通过：<code>GET /health</code> 返回 <code>{"status":"ok"}</code>。</li>
+      <li>索引构建通过：<code>POST /api/ai/rag/index</code> 返回 <code>files=1</code>、<code>chunks=1</code>。</li>
+      <li>检索接口通过：问题“HuManus 第二阶段实现了什么”命中 <code>data/knowledge/example.md</code>。</li>
+      <li>RAG 问答通过：返回了第二阶段功能说明，并附带来源。</li>
+      <li>第一阶段基础聊天回归通过：请求“请只回复ok”返回 <code>ok</code>。</li>
+    </ul>
+
+    <h3>5. 第二阶段测试命令</h3>
+    <pre><code>curl -X POST http://127.0.0.1:8123/api/ai/rag/index
+
+curl -G "http://127.0.0.1:8123/api/ai/rag/retrieve" \
+  --data-urlencode "message=HuManus 第二阶段实现了什么"
+
+curl -G "http://127.0.0.1:8123/api/ai/rag/chat" \
+  --data-urlencode "message=HuManus 第二阶段实现了什么" \
+  --data-urlencode "chatId=rag_test"</code></pre>
+
+    <h2>十一、后续阶段建议</h2>
+    <ol>
+      <li>第三阶段实现工具调用：网页搜索、网页抓取、文件操作、PDF 生成、资源下载、terminate 工具。</li>
+      <li>第四阶段实现 YuManus / ReAct Agent：状态管理、最大步数、模型规划、工具调用、观察结果和自动终止。</li>
+      <li>第五阶段接入 MCP：将 MCP Server 工具包装为 Agent 可调用工具。</li>
+      <li>可选优化：为 RAG 配置真正可用的 embedding 模型，例如 Ollama <code>nomic-embed-text</code> 或本地 OpenAI-compatible embedding 服务。</li>
+    </ol>
+
+    <div class="warning">
+      <strong>安全说明：</strong>
+      本日志没有保存完整 API Key。完整密钥仅存在于本地 <code>HuManus/.env</code>，且该文件已被 <code>.gitignore</code> 忽略，不应提交到公开仓库。
+    </div>
+
+    <div class="success">
+      <strong>当前状态：</strong>
+      第一阶段 MVP 和第二阶段 RAG MVP 均已完成，后端服务当前可通过 <code>http://127.0.0.1:8123</code> 访问。
+    </div>
+  </div>
+</body>
+</html>

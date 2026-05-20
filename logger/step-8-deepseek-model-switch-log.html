@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>HuManus Step 8 DeepSeek 模型切换日志</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Arial,sans-serif;line-height:1.75;background:#f6f8fb;color:#1f2937;padding:32px}.container{max-width:1080px;margin:0 auto;background:white;border-radius:16px;padding:34px;box-shadow:0 10px 30px rgba(15,23,42,.08)}h2{border-left:5px solid #2563eb;padding-left:12px;margin-top:30px}code{background:#f3f4f6;padding:2px 6px;border-radius:5px}pre{background:#111827;color:#f9fafb;padding:16px;border-radius:12px;overflow:auto}.ok{background:#ecfdf5;border:1px solid #a7f3d0;padding:14px;border-radius:10px}.warn{background:#fff7ed;border:1px solid #fed7aa;padding:14px;border-radius:10px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #e5e7eb;padding:10px;text-align:left;vertical-align:top}th{background:#f3f4f6}</style></head><body><div class="container"><h1>HuManus Step 8：DeepSeek 模型切换日志</h1><p>记录日期：2026-05-19</p><div class="ok"><strong>阶段结论：</strong>HuManus 主聊天模型已从本地 OpenAI-compatible 服务切换到 DeepSeek OpenAI-compatible API，模型为 <code>deepseek-v4-flash</code>，并已完成接口验证。</div><h2>参考配置</h2><table><tr><th>参数</th><th>值</th></tr><tr><td><code>LLM_PROVIDER</code></td><td><code>openai_compatible</code></td></tr><tr><td><code>LLM_BASE_URL</code></td><td><code>https://api.deepseek.com</code></td></tr><tr><td><code>LLM_MODEL</code></td><td><code>deepseek-v4-flash</code></td></tr><tr><td><code>LLM_API_KEY</code></td><td><code>sk-48b0****6b31</code>（日志中已脱敏）</td></tr><tr><td><code>ENABLE_OLLAMA_FALLBACK</code></td><td><code>true</code></td></tr><tr><td><code>OLLAMA_MODEL</code></td><td><code>qwen3:4b</code></td></tr></table><h2>修改文件</h2><ul><li><code>HuManus/.env</code>：写入实际 DeepSeek API Key、base URL 和模型名。</li><li><code>HuManus/.env.example</code>：更新 DeepSeek 示例配置，不包含真实 API Key。</li><li><code>HuManus/app/core/config.py</code>：更新默认 base URL 和模型名。</li><li><code>HuManus/README.md</code>：更新主模型说明。</li><li><code>CLAUDE.md</code>：更新未来 Claude Code 的模型配置说明。</li></ul><h2>RAG embedding 处理</h2><div class="warn">DeepSeek 本次配置用于聊天模型。为避免 RAG 流程误调用 DeepSeek embedding endpoint，已将 <code>RAG_EMBEDDING_PROVIDER</code> 改为 <code>hash</code>。该方式适合流程验证，不代表生产语义检索质量。</div><h2>验证命令</h2><pre><code>.venv/Scripts/python -m compileall app
+
+.venv/Scripts/python - <<'PY'
+from app.core.config import get_settings
+settings = get_settings()
+print(settings.llm_provider)
+print(settings.llm_base_url)
+print(settings.llm_model)
+print(settings.rag_embedding_provider)
+PY
+
+curl http://127.0.0.1:8123/health
+
+curl -G "http://127.0.0.1:8123/api/ai/love_app/chat" \
+  --data-urlencode "message=Reply exactly: deepseek-ok" \
+  --data-urlencode "chatId=deepseek_test_ascii"</code></pre><h2>验证结果</h2><ul><li>配置读取结果：<code>openai_compatible</code>、<code>https://api.deepseek.com</code>、<code>deepseek-v4-flash</code>、<code>hash</code>。</li><li>健康检查返回：<code>{"status":"ok"}</code>。</li><li>聊天接口返回：<code>deepseek-ok</code>。</li></ul><h2>当前状态</h2><pre><code>后端服务：http://127.0.0.1:8123
+主模型：deepseek-v4-flash
+备用模型：Ollama qwen3:4b</code></pre></div></body></html>

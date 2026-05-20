@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>HuManus Step 6 最终验证日志</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Arial,sans-serif;line-height:1.75;background:#f6f8fb;color:#1f2937;padding:32px}.container{max-width:1120px;margin:0 auto;background:white;border-radius:16px;padding:34px;box-shadow:0 10px 30px rgba(15,23,42,.08)}h2{border-left:5px solid #2563eb;padding-left:12px;margin-top:30px}code{background:#f3f4f6;padding:2px 6px;border-radius:5px}pre{background:#111827;color:#f9fafb;padding:16px;border-radius:12px;overflow:auto}.ok{background:#ecfdf5;border:1px solid #a7f3d0;padding:14px;border-radius:10px}.warn{background:#fff7ed;border:1px solid #fed7aa;padding:14px;border-radius:10px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #e5e7eb;padding:10px;text-align:left;vertical-align:top}th{background:#f3f4f6}</style></head><body><div class="container"><h1>HuManus Step 6：最终文档与全流程验证日志</h1><p>记录日期：2026-05-19</p><div class="ok"><strong>最终结论：</strong>HuManus 后续全流程 MVP 已完成：安全工具层、YuManus Agent、MCP stub、README 更新和完整回归验证均已通过。</div><h2>本轮完成阶段</h2><table><tr><th>阶段</th><th>结果</th></tr><tr><td>Step 3 工具层</td><td>完成安全工具协议、注册表、文件/Web/下载/PDF/terminate 工具；终端命令禁用。</td></tr><tr><td>Step 4 Agent</td><td>完成 YuManus Agent、严格 JSON 动作决策、SSE 输出和每步 HTML 运行日志。</td></tr><tr><td>Step 5 MCP</td><td>完成 MCP 配置读取、客户端 stub、MCP 工具代理 stub 和状态接口；默认关闭。</td></tr><tr><td>Step 6 文档验证</td><td>更新 README、依赖、配置示例和忽略规则，完成全流程验证。</td></tr></table><h2>关键文件</h2><ul><li><code>HuManus/app/tools/</code>：安全工具层。</li><li><code>HuManus/app/agents/yumanus.py</code>：YuManus Agent。</li><li><code>HuManus/app/services/html_step_logger.py</code>：Agent 运行 HTML 日志器。</li><li><code>HuManus/app/services/manus_app.py</code>：Manus 服务封装。</li><li><code>HuManus/app/mcp/</code>：MCP stub。</li><li><code>HuManus/app/api/ai.py</code>：新增 Manus tools、MCP status 和真实 Manus SSE。</li><li><code>HuManus/README.md</code>：全流程文档。</li></ul><h2>验证命令与结果</h2><pre><code>.venv/Scripts/python -m compileall app
+# 结果：通过
+
+curl http://127.0.0.1:8123/health
+# 结果：{"status":"ok"}
+
+curl http://127.0.0.1:8123/api/ai/manus/tools
+# 结果：返回 read_file/write_file/web_search/web_scrape/resource_download/generate_pdf/terminate
+
+curl http://127.0.0.1:8123/api/ai/manus/mcp/status
+# 结果：{"enabled":false,"config_path":"mcp.json","servers":[],"tools":[]}
+
+curl -G http://127.0.0.1:8123/api/ai/rag/retrieve --data-urlencode "message=HuManus 第二阶段实现了什么"
+# 结果：命中 data/knowledge/example.md
+
+curl -G http://127.0.0.1:8123/api/ai/love_app/chat --data-urlencode "message=请只回复ok" --data-urlencode "chatId=final_regression"
+# 结果：ok
+
+curl -N -G http://127.0.0.1:8123/api/ai/manus/chat --data-urlencode "message=请生成一份简短任务计划，不需要使用工具，直接 final" --data-urlencode "chatId=final_test"
+# 结果：返回 event: step、event: final、data: [DONE]</code></pre><h2>Agent 运行日志</h2><p>最终 Manus SSE 验证生成了运行日志：</p><pre><code>logger/manus-runs/final_test-20260519-005150.html</code></pre><p>每个 Agent step 都会写入对应运行日志文件。</p><h2>安全边界确认</h2><ul><li>任意终端命令执行未开放。</li><li>文件读写限制在配置目录内。</li><li>敏感文件名访问被阻断。</li><li>默认阻断私有网络、本机地址、链路本地和组播 URL。</li><li>MCP 默认关闭，且当前 stub 不启动外部 command。</li><li>HTML 日志对内容做转义，避免日志注入。</li></ul><h2>已知限制</h2><div class="warn"><ul><li>Web search 仍为 provider 占位，未配置真实搜索服务时会返回明确错误。</li><li>MCP transport 只是 stub，尚未接入真实 MCP 会话。</li><li>RAG 若无可用 embedding 服务会使用 hash embedding，仅适合流程验证。</li><li>YuManus 当前通过严格 JSON 提示驱动工具调用，不是完整 LangGraph 持久化 Agent。</li></ul></div><h2>当前服务</h2><pre><code>http://127.0.0.1:8123</code></pre></div></body></html>

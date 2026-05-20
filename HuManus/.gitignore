@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+data/chat_memory/*.json
+data/rag/index.json
+data/manus/downloads/*
+data/manus/output/*
+../logger/manus-runs/*
