@@ -9,6 +9,12 @@ from app.mcp.client import McpClient
 from app.services.rag_app import RagApp
 from app.tools.registry import list_tools_for_prompt
 
+
+def sse_data(text: str) -> str:
+    lines = str(text).splitlines() or [""]
+    return "".join(f"data: {line}\n" for line in lines) + "\n"
+
+
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 love_app = LoveApp()
 rag_app = RagApp()
@@ -49,10 +55,10 @@ async def chat_with_love_app_sse(
     async def event_generator() -> AsyncIterator[str]:
         try:
             async for chunk in love_app.chat_stream(message, chat_id_value):
-                yield f"data: {chunk}\n\n"
-            yield "data: [DONE]\n\n"
+                yield sse_data(chunk)
+            yield sse_data("[DONE]")
         except Exception as exc:
-            yield f"event: error\ndata: {str(exc)}\n\n"
+            yield f"event: error\n{sse_data(str(exc))}"
 
     return StreamingResponse(
         event_generator(),
@@ -146,7 +152,7 @@ async def chat_with_manus(
             async for event in manus_app.chat_stream(message, chat_id_value):
                 yield event
         except Exception as exc:
-            yield f"event: error\ndata: {str(exc)}\n\n"
+            yield f"event: error\n{sse_data(str(exc))}"
 
     return StreamingResponse(
         event_generator(),
